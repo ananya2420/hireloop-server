@@ -7,7 +7,7 @@ require('dotenv').config();
 app.use(cors());
 app.use(express.json())
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 app.get('/', (req, res) => {
   res.send('Hello World!')
@@ -33,6 +33,14 @@ async function run() {
     const database = client.db("hireloop_db");
     const jobCollection = database.collection("jobs");
     const companyCollection=database.collection("companies");
+    const usersCollection = database.collection("user");
+
+      app.get('/api/users', async (req, res) => {
+            
+            const cursor = usersCollection.find().skip(6);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
     
 
      app.get('/api/jobs', async(req, res) =>{
@@ -48,12 +56,64 @@ async function run() {
             res.send(result);
         })
 
+          app.get('/api/jobs/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {
+                _id: new ObjectId(id)
+            }
+            const result = await jobCollection.findOne(query);
+            res.send(result);
+        })
+
     app.post('/api/jobs',async(req,res)=>{
         const job=req.body;
-        const result=await jobCollection.insertOne(job);
+        const newJob={
+          ...job,
+          createAt:new Date()
+        }
+        const result=await jobCollection.insertOne(newJob);
         res.send(result);
 
     })
+
+
+   //company related apis 
+    app.get('/api/companies', async (req, res) => {
+            const cursor = companyCollection.find().skip(4);
+            const result = await cursor.toArray();
+            res.send(result);
+        })
+
+
+
+   app.get('/api/my/companies',async(req,res)=>{
+    console.log('companies');
+
+        const query={};
+        if(req.query.recruiterId){
+          query.recruiterId=req.query.recruiterId;
+          
+
+        }
+        console.log(req.query);
+
+        const result=await companyCollection.findOne(query);
+
+        console.log("My companies",result);
+        res.send(result);
+
+   })
+
+
+   app.post('/api/companies',async(req,res)=>{
+    const company=req.body;
+    const newCompany={
+      ...company,
+      createAt:new Date()
+    }
+    const result=await companyCollection.insertOne(company);
+    res.send(result);
+   })
 
 
     // Send a ping to confirm a successful connection

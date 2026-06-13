@@ -163,6 +163,7 @@ async function run() {
                     $sort: { count: 1 }
                 }
             ]
+            
 
             const cursor = jobCollection.aggregate(pipeline);
             const result = await cursor.toArray();
